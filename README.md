@@ -19,9 +19,5 @@ fn app(cx: Scope) -> Element {
 
 ## Limitations
 
-#### need to add web-sys as a dependancy
-
-`web-sys = { version = "0.3.58", features = ["Document", "Window", "Element", "HtmlHeadElement"] }`
-
 #### custom properties are not possible yet
 Dioxus doesnt have a way to pass through properies in elements yet.

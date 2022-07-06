@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, Ident, LitStr, parse::{Parse, ParseStream}, Token};
 use quote::{quote, format_ident};
+use rand::{thread_rng, distributions::{Alphanumeric, DistString}};
 
 struct StyledElement {
     name: Ident,
@@ -29,6 +30,11 @@ pub fn styled(stream: TokenStream) -> TokenStream {
 
     let props_name = format_ident!("{name}Props");
 
+    let mut rng = thread_rng();
+    let rand_chars = Alphanumeric.sample_string(&mut rng, 5);
+
+    let class_name = format!("{name}-{rand_chars}");
+
     let expanded = quote! {
         #[derive(Props)]
         pub struct #props_name<'a> {
@@ -37,10 +43,13 @@ pub fn styled(stream: TokenStream) -> TokenStream {
 
         #[allow(none_snake_case)]
         pub fn #name<'a>(cx: Scope<'a, #props_name<'a>>) -> Element<'a> {
-            let class = stringify!(#name);
+            let class = #class_name;
 
-            cx.use_hook(|_| {
-                let document = ::web_sys::window().unwrap().document().unwrap();
+            static REGISTERED: ::std::sync::atomic::AtomicBool = ::std::sync::atomic::AtomicBool::new(false);
+            let was_registered = REGISTERED.swap(true, ::std::sync::atomic::Ordering::Relaxed);
+
+            if !was_registered {
+                let document = styled_components::web_sys::window().unwrap().document().unwrap();
                 let head = document.head().unwrap();
 
                 let style_element = match document.get_element_by_id("styled-components-style") {
@@ -55,7 +64,7 @@ pub fn styled(stream: TokenStream) -> TokenStream {
 
                 let inner_css = style_element.inner_html();
                 style_element.set_inner_html(&format!("{}.{}{{{}}}", inner_css, class, #style));
-            });
+            };
 
             cx.render(rsx! {
                 #element {

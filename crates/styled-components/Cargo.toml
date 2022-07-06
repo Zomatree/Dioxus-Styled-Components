@@ -1,0 +1,8 @@
+[package]
+name = "styled-components"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+web-sys = { version = "0.3.58", features = ["Document", "Window", "Element", "HtmlHeadElement"] }
+styled-components-macros = { path = "../styled-components-macros" }
